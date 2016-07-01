@@ -132,28 +132,3 @@ def load(filename, password='', keyfile=''):
     )
     return [KPEntry(x) for x in entries]
 
-# _EntryPersonal = namedtuple('EntryPersonal', ['username', 'password'])
-# def build_rofi_data(entries):
-#     """Get the rofi display strings and their username/pw.
-
-#     build_rofi_data returns a dict where
-#                     keys   = rofi display strings
-#                     values = namedtuple with order ('username', 'password')
-#     entries is an iterable of kdb entries like that returned by load_entries(...)
-#     """
-#     kp_entries = (KPEntry(x, _EntryPersonal) for x in entries)
-#     return OrderedDict((x.as_string, x.as_ntuple) for x in kp_entries)
-
-# d = build_rofi_data(load_entries(filename, pw, keyfile))
-# k = list(d.keys())[0]
-
-# x = KPEntry(entries[0])
-# print(x)
-
-# x = kp_entries[-1]
-# print(x.format())
-# print(x.format(str))
-# print(x.format(lambda x: _pad_or_truncate(str(x), maxlen=30)))
-
-# print(x.as_ntuple)
-# print(x.get_as_ntuple(EntryPersonal))
