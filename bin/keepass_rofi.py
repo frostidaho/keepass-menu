@@ -28,10 +28,10 @@ def load_keepass_db(filename, password='', keyfile=''):
 
 def run_rofi(somedict, n_lines_per_entry=1, entry_sep='+'):
     if n_lines_per_entry > 1:
-        cmd = ('rofi', '-dmenu', '-eh', str(n_lines_per_entry),
+        cmd = ('rofi', '-dmenu', '-i', '-eh', str(n_lines_per_entry),
                '-sep', entry_sep)
     else:
-        cmd = ('rofi', '-dmenu')
+        cmd = ('rofi', '-dmenu', '-i')
         entry_sep = ''
 
     def _common(cmd, somedict, entry_sep):
