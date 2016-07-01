@@ -88,19 +88,32 @@ class KPEntry:
         return self.__str__()
 
     def format_for_rofi(self):
+        # TODO Clean up the formatting mess here and in
+        # _pad_or_truncate
         pot = _pad_or_truncate
         e = self.as_dict
         dformatted = {
             'title' : pot(e['title'].capitalize(), '', 50),
-            'url' : pot(e['url'], '', 50),
-            'groupname' : pot(e['groupname'], '>30', 30),
-            'username' : '✉' + pot( e['username'], '<40', 50),
+            'url' : '({})'.format(pot(e['url'], '', 50)) if e['url'] else '',
+            'groupname' : '[{}]'.format(pot(e['groupname'], '', 50)) if e['groupname'] else '',
+            'username' : '✉' + pot( e['username'], '', 50),
             # 'Notes' : pot(e['Notes'], '>45'),
         }
 
-        line1 = ' '.join(('•', dformatted['title'], '/', dformatted['url']))
-        line2 = ' '.join((' ', dformatted['username'], dformatted['groupname']))
-        return line1 + '\n' + line2
+        n_cols_normal = 30        
+        def reformat(key, ):
+            frmt_str='{:<' + str(n_cols_normal) + '}'
+            dformatted[key] = frmt_str.format(dformatted[key])
+            
+        reformat('url')
+        reformat('title')
+        reformat('username')
+        reformat('groupname')
+
+        line1 = ' '.join(('•', dformatted['title'], dformatted['url'],))
+        line2 = ' '.join((' ', dformatted['username'], dformatted['groupname'],))
+        line3 = '  ' + e['notes']
+        return line1 + '\n' + line2 + '\n' + line3
 
     def format(self, fn=None):
         """Return the formatted string representation of the entry.

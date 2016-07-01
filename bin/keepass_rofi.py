@@ -64,7 +64,7 @@ class copy:
 
 def rofi_db(kdb_path, password='', keyfile=''):
     d = load_keepass_db(kdb_path, password, keyfile)
-    key, res = run_rofi(d, n_lines_per_entry=2)
+    key, res = run_rofi(d, n_lines_per_entry=3)
     copy.clipboard(res.username)
     copy.primary(res.password)
     return key, res
