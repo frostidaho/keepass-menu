@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-# import sys
+
 import argparse
-# import getpass
 import subprocess as sp
+# import getpass
+# import sys
 
 import readkeepass as rk
 from collections import OrderedDict
@@ -64,9 +65,6 @@ class copy:
 def rofi_db(kdb_path, password='', keyfile=''):
     d = load_keepass_db(kdb_path, password, keyfile)
     key, res = run_rofi(d, n_lines_per_entry=2)
-    # print('\n', key)
-    # print(40*'-')
-    # print(res)
     copy.clipboard(res.username)
     copy.primary(res.password)
     return key, res
@@ -93,5 +91,4 @@ if __name__ == '__main__':
         sp.run(['notify-send', '{} has been copied!'.format(res.title, res.url)])
     else:
         print('No password given!')
-    # ./keepass_rofi.py --filename ~/htmp/rofi_keepass/tests/data/exampledatabase.kdbx --keyfile ~/htmp/rofi_keepass/tests/data/exampledatabase.key 
 

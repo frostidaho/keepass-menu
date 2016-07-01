@@ -76,7 +76,6 @@ class KPEntry:
 
     def get_as_ntuple(self, NamedTuple=None):
         if NamedTuple:
-            # self.NamedTuple = NamedTuple
             return _ntuple_from_dict(self.as_dict, NamedTuple)
         return _ntuple_from_dict(self.as_dict, self.NamedTuple)
 
