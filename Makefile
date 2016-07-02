@@ -1,6 +1,9 @@
 # Take a look at ..../ende/Makefile
 # https://www.digitalocean.com/community/tutorials/how-to-use-makefiles-to-automate-repetitive-tasks-on-an-ubuntu-vps
+
+# Git ignored and untracked files: http://stackoverflow.com/a/4855096
 git_ignored_files=$(shell git ls-files . --ignored --exclude-standard --others)
+# git_untracked_files=$(shell git ls-files . --exclude-standard --others)
 
 # Getting makefile path: http://stackoverflow.com/a/18137056
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
