@@ -1,14 +1,20 @@
 #!/usr/bin/env python
+"""Open KeePass database with rofi.
 
+Select an entry using rofi,
+and then paste password with primary selection
+and username with clipboard selection.
+"""
 import argparse
 import subprocess as sp
 import re
+from collections import OrderedDict
 # import getpass
 # import sys
 
 import readkeepass as rk
-from collections import OrderedDict
 from tabulate import tabulate
+
 # def get_password():
 #     if sys.stdin.isatty():
 #         p = getpass.getpass('Using getpass: ')
@@ -17,12 +23,11 @@ from tabulate import tabulate
 #         p = sys.stdin.readline().rstrip()
 #     return p
 
-def load_keepass_db(filename, password='', keyfile=''):
-    """Get the rofi display strings and their username/pw.
+def build_rofi_input(filename, password='', keyfile=''):
+    """Create a dictionary from a keepass database file.
 
-    load_keepass_db returns a dict where
-                    keys   = rofi display strings
-                    values = namedtuple with attributes 'username', 'password', and more
+    The keys are display strings for each entry in the keepass database 
+    The values are a namedtuple containing all of an entry's info.
     """
     def tabulate_list(entries, entry_layout):
         to_format = []
@@ -40,11 +45,8 @@ def load_keepass_db(filename, password='', keyfile=''):
     to_format = tabulate_list(entries, entry_layout)
     table_str = tabulate(to_format, tablefmt='plain')
 
-    table = [x.rstrip() for x in re.findall(len(entry_layout) * r'.*\n', table_str)]
-    od = OrderedDict()
-    for k,entry in zip(table, entries):
-        od[k] = entry.as_ntuple
-    return od
+    table = re.findall(len(entry_layout) * r'.*\n', table_str)
+    return OrderedDict(zip(table, [x.as_ntuple for x in entries]))
 
 class copy:
     @staticmethod
@@ -62,33 +64,38 @@ class copy:
     def primary(txt):
         return copy._xsel(txt, 'primary')
 
-def rofi_db(kdb_path, password='', keyfile=''):
-    d = load_keepass_db(kdb_path, password, keyfile)
-    key, res = rk.rofi.run(d, n_lines_per_entry=3)
+def launch_rofi(kdb_path, password='', keyfile=''):
+    d = build_rofi_input(kdb_path, password, keyfile)
+    key, res = rk.rofi.run(d)
     copy.clipboard(res.username)
     copy.primary(res.password)
     return key, res
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Open KeePass database with rofi. Then select an entry, and paste password with primary selection and username with clipboard selection.')
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument('--filename', type=str, required=True)
     parser.add_argument('--keyfile', type=str)
-    # TODO add & test option to read password from terminal
-    # parser.add_argument(
-    #     "--xpassword",
-    #     help="ask for password with a graphical window",
-    #     action="store_true",
-    # )
     return parser.parse_args()
 
-if __name__ == '__main__':
+def main():
     args = parse_args()
     db_name = args.filename.split('/')[-1]
     pw = rk.xquery.run(prompt='Password for {}:'.format(db_name),
                        button='OK', password=True)
-    if pw:
-        key, res = rofi_db(args.filename, pw, args.keyfile)
-        sp.run(['notify-send', '{} has been copied!'.format(res.title, res.url)])
-    else:
+    if not pw:
         print('No password given!')
+        return
 
+    try:
+        key, res = launch_rofi(args.filename, pw, args.keyfile)
+        msg = 'Selected: {} ({}) - {}'.format(res.title, res.url, res.username)
+        print(msg)
+        sp.run(['notify-send', msg])
+    except AttributeError:
+        print('Rofi did not return a key.')
+
+if __name__ == '__main__':
+    main()
