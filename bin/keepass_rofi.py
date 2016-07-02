@@ -2,12 +2,13 @@
 
 import argparse
 import subprocess as sp
+import re
 # import getpass
 # import sys
 
 import readkeepass as rk
 from collections import OrderedDict
-
+from tabulate import tabulate
 # def get_password():
 #     if sys.stdin.isatty():
 #         p = getpass.getpass('Using getpass: ')
@@ -23,28 +24,27 @@ def load_keepass_db(filename, password='', keyfile=''):
                     keys   = rofi display strings
                     values = namedtuple with attributes 'username', 'password', and more
     """
+    def tabulate_list(entries, entry_layout):
+        to_format = []
+        for e in entries:
+            d = e.as_formatted_dict
+            for row in entry_layout:
+                vals = [d.get(key, ' ') for key in row]
+                vals = [x if x else ' ' for x in vals]
+                to_format.append(tuple(vals))
+        return to_format
+
     entries = rk.load(filename, password, keyfile)
-    key_vals = ((x.as_string, x.as_ntuple) for x in entries)
-    return OrderedDict(key_vals)
+    entry_layout = (('title', 'url'), ('username', 'groupname'), ('notes', None))
 
-def run_rofi(somedict, n_lines_per_entry=1, entry_sep='+'):
-    if n_lines_per_entry > 1:
-        cmd = ('rofi', '-dmenu', '-i', '-eh', str(n_lines_per_entry),
-               '-sep', entry_sep)
-    else:
-        cmd = ('rofi', '-dmenu', '-i')
-        entry_sep = ''
+    to_format = tabulate_list(entries, entry_layout)
+    table_str = tabulate(to_format, tablefmt='plain')
 
-    def _common(cmd, somedict, entry_sep):
-        entries = ('\n' + entry_sep).join(somedict)
-        entries = entries.encode()
-        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
-        stdout, stderr = p.communicate(entries)
-        p.terminate()
-        p.kill()
-        key = stdout.decode().rstrip()
-        return key, somedict[key]
-    return _common(cmd, somedict, entry_sep)
+    table = [x.rstrip() for x in re.findall(len(entry_layout) * r'.*\n', table_str)]
+    od = OrderedDict()
+    for k,entry in zip(table, entries):
+        od[k] = entry.as_ntuple
+    return od
 
 class copy:
     @staticmethod
@@ -64,7 +64,7 @@ class copy:
 
 def rofi_db(kdb_path, password='', keyfile=''):
     d = load_keepass_db(kdb_path, password, keyfile)
-    key, res = run_rofi(d, n_lines_per_entry=3)
+    key, res = rk.rofi.run(d, n_lines_per_entry=3)
     copy.clipboard(res.username)
     copy.primary(res.password)
     return key, res

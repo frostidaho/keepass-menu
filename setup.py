@@ -16,6 +16,7 @@ setup(
     install_requires=[
         "lxml>=3.2.1",
         "pycrypto>=2.6.1",
+        "tabulate>=0.7.5",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",

@@ -5,7 +5,10 @@ from os import path
 import readkeepass as rkp
 kdb = rkp.kdb
 
-data_dir = path.join(path.dirname(path.abspath(__file__)), 'data')
+try:
+    data_dir = path.join(path.dirname(path.abspath(__file__)), 'data')
+except NameError:
+    data_dir = path.join(os.getcwd(), 'data')
 ex_db = path.join(data_dir, 'exampledatabase.kdbx')
 ex_key = path.join(data_dir, 'exampledatabase.key')
 ex_password = 'pass'
@@ -30,12 +33,16 @@ dentry_0 = {
 
 entry_0 = rkp.KPEntry(dentry_0)
 
-class TestKPEntry(unittest.TestCase):
-    def test_str(self):
-        s0 = str(entry_0)
-        s1 = getattr(entry_0, entry_0.format_fn_name)()
-        self.assertEqual(s0, s1)
+dformatted_0 = {
+    'groupname': '[Root]',
+    'notes': ' »this is for digital ocean«',
+    'password': 'meow',
+    'title': '• Digitalocean',
+    'url': '(digitalocean.com)',
+    'username': '✉ doswag@gmail.com'
+}
 
+class TestKPEntry(unittest.TestCase):
     def test_ntuple(self):
         d_orig = entry_0.as_dict
         as_nt = entry_0.as_ntuple
@@ -45,6 +52,11 @@ class TestKPEntry(unittest.TestCase):
 
     def test_dict(self):
         self.assertEqual(dentry_0, entry_0.as_dict)
+
+    def test_dict_formatted(self):
+        df = entries[0].as_formatted_dict
+        for k in df:
+            self.assertEqual(df[k], dformatted_0[k])
 
 class TestLoading(unittest.TestCase):
     def test_db_loader(self):

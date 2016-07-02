@@ -43,22 +43,86 @@ def load_entries(filename, password='', keyfile=''):
             entries2.append(d)
     return entries2
 
-def _pad_or_truncate(some_str, pad='<30', maxlen=-1):
-    "Return the padded or truncated string s"
-    def truncate_str(s, maxlen=None, append='...'):
-        if maxlen is None:
-            return s
-        if len(s) <= maxlen:
-            return s
-        lapp = len(append)
-        return s[:maxlen - lapp] + append
+class StringElements:
+    "Formatter class for a KeePass entry dictionary."
+    maxlen_longest = 40
+    maxlen_normal = 30
     
-    if maxlen != -1:
-        n = str(maxlen)
-        frmt = '{:' + pad + '.' + n + '}'
-        return frmt.format(truncate_str(some_str, maxlen))
-    frmt = '{:' + pad + '}'
-    return frmt.format(some_str)
+    def __init__(self, d_entry):
+        """\
+        Format key,value pairs in d_entry using the method StringElements.key(value).
+        
+        You only need to define methods for those keys you want to transform.
+        If no method is defined for a key, the transformation is just the identity fn.
+
+        Usage example:
+            d = {
+                'title' : 'digitalocean',
+                'notes' : 'this is for digital ocean',
+                'password' : 'meow',
+                'url': 'digitalocean.com',
+                'username' : 'doswag@gmail.com',
+                'groupname' : 'Root',
+            }
+            se = StringElements(d)
+            dformatted = se.format()
+        """
+        self.d_formatted = {}
+        self.d_entry = d_entry
+
+    def format(self):
+        d_formatted = {}
+        for k,v in self.d_entry.items():
+            try:
+                if v:
+                    d_formatted[k] = getattr(self, k)(v)
+                else:
+                    d_formatted[k] = ''
+            except AttributeError:
+                d_formatted[k] = v
+        self.d_formatted = d_formatted
+        return d_formatted
+
+    def title(self, x):
+        x = x.capitalize()
+        return '• ' + self.truncate_str(x, self.maxlen_longest)
+
+    def url(self, x):
+        # See here for stripping http:// and similar
+        # http://stackoverflow.com/a/14625862
+        x = self.truncate_str(x, self.maxlen_longest)
+        x = '({})'.format(x)
+        return x
+
+    def groupname(self, x):
+        x = self.truncate_str(x, self.maxlen_normal)
+        x = '[{}]'.format(x)
+        return x
+
+    def username(self, x):
+        x = self.truncate_str(x, self.maxlen_longest)
+        x = '✉ ' + x
+        return x
+
+    def notes(self, x):
+        x = self.truncate_str(x, self.maxlen_normal)
+        x = ' »' + x + '«'
+        return x
+
+    @staticmethod
+    def truncate_str(s, maxlen=None, append='...'):
+            if maxlen is None:
+                return s
+            if len(s) <= maxlen:
+                return s
+            lapp = len(append)
+            return s[:maxlen - lapp] + append
+
+    def __str__(self):
+        return str(self.d_formatted)
+
+    def __repr__(self):
+        return repr(self.d_formatted)
 
 EntryFields = namedtuple(
     'EntryFields',
@@ -66,8 +130,8 @@ EntryFields = namedtuple(
 )
 
 class KPEntry:
-    format_fn_name = 'format_for_rofi'
     NamedTuple = EntryFields
+    dict_formatter = lambda entry_dict: StringElements(entry_dict).format()
     
     def __init__(self, entry_dict, NamedTuple=None):
         self.as_dict = entry_dict
@@ -87,51 +151,16 @@ class KPEntry:
     def as_string(self):
         return self.__str__()
 
-    def format_for_rofi(self):
-        # TODO Clean up the formatting mess here and in
-        # _pad_or_truncate
-        pot = _pad_or_truncate
-        e = self.as_dict
-        dformatted = {
-            'title' : pot(e['title'].capitalize(), '', 50),
-            'url' : '({})'.format(pot(e['url'], '', 50)) if e['url'] else '',
-            'groupname' : '[{}]'.format(pot(e['groupname'], '', 50)) if e['groupname'] else '',
-            'username' : '✉' + pot( e['username'], '', 50),
-            # 'Notes' : pot(e['Notes'], '>45'),
-        }
-
-        n_cols_normal = 30        
-        def reformat(key, ):
-            frmt_str='{:<' + str(n_cols_normal) + '}'
-            dformatted[key] = frmt_str.format(dformatted[key])
-            
-        reformat('url')
-        reformat('title')
-        reformat('username')
-        reformat('groupname')
-
-        line1 = ' '.join(('•', dformatted['title'], dformatted['url'],))
-        line2 = ' '.join((' ', dformatted['username'], dformatted['groupname'],))
-        line3 = '  ' + e['notes']
-        return line1 + '\n' + line2 + '\n' + line3
-
-    def format(self, fn=None):
-        """Return the formatted string representation of the entry.
-
-        By default the formatting function (fn) is self.format_fn_name.
-
-        If fn is given it can be the name of another method in KPEntry,
-        or a function which takes the entry's dictionary as its argument.
-        """
-        if fn:
-            try:                    # Allow passing in a function
-                return str(fn(self.as_dict))
-            except TypeError:
-                return str(getattr(self, fn)())
-        return str(getattr(self, self.format_fn_name)())
+    @property
+    def as_formatted_dict(self):
+        return __class__.dict_formatter(self.as_dict)
 
     def __str__(self):
-        return self.format()
+        fields = []
+        for k,v in self.as_formatted_dict.items():
+            if k != 'password':
+                fields.append('{} -> {}'.format(k,v))
+        return '\n'.join(fields)
 
     def __repr__(self):
         return 'KPEntry(' + repr(self.as_dict) + ')'
