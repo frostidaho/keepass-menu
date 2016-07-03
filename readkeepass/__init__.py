@@ -1,6 +1,7 @@
-from . import kdb
-from . import xquery
-from . import rofi
+import readkeepass.kdb
+import readkeepass.xquery
+import readkeepass.rofi
+import readkeepass.xoutput
 
 load = kdb.load
 KPEntry = kdb.KPEntry

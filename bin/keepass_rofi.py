@@ -6,7 +6,6 @@ and then paste password with primary selection
 and username with clipboard selection.
 """
 import argparse
-import subprocess as sp
 import re
 from collections import OrderedDict
 # import getpass
@@ -48,27 +47,9 @@ def build_rofi_input(filename, password='', keyfile=''):
     table = re.findall(len(entry_layout) * r'.*\n', table_str)
     return OrderedDict(zip(table, [x.as_ntuple for x in entries]))
 
-class copy:
-    @staticmethod
-    def _xsel(txt, selection='primary'):
-        cmd = ['xsel', '--logfile', '/dev/null',
-               '--{}'.format(selection), '--input']
-        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
-        return p.communicate(txt.encode())
-
-    @staticmethod
-    def clipboard(txt):
-        return copy._xsel(txt, 'clipboard')
-
-    @staticmethod
-    def primary(txt):
-        return copy._xsel(txt, 'primary')
-
 def launch_rofi(kdb_path, password='', keyfile=''):
     d = build_rofi_input(kdb_path, password, keyfile)
     key, res = rk.rofi.run(d)
-    copy.clipboard(res.username)
-    copy.primary(res.password)
     return key, res
 
 def parse_args():
@@ -93,9 +74,15 @@ def main():
         key, res = launch_rofi(args.filename, pw, args.keyfile)
         msg = 'Selected: {} ({}) - {}'.format(res.title, res.url, res.username)
         print(msg)
-        sp.run(['notify-send', msg])
+        rk.xoutput.notify_send(msg)
     except AttributeError:
         print('Rofi did not return a key.')
+        return
+
+    try:
+        rk.xoutput.autotype(res.username, res.password)
+    except Exception as e:
+        print(e)
 
 if __name__ == '__main__':
     main()
