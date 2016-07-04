@@ -62,7 +62,7 @@ def parse_args(default_output='autotype', default_input='xquery'):
     parser.add_argument(
         '-o', '--output',
         type = str,
-        choices = ('copy', 'autotype', 'stdout'),
+        choices = ('copy', 'autotype', 'autotype_tab', 'stdout'),
         default = default_output,
         help = ('Output username & password with this method.'
                 "\nDefaults to '{}'".format(default_output))
@@ -107,7 +107,7 @@ def main():
 
     try:
         getattr(rk.xoutput, args.output)(res.username, res.password)
-    except Exception as e:
+    except EnvironmentError as e:
         print(e)
 
 if __name__ == '__main__':

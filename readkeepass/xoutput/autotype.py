@@ -7,6 +7,9 @@ from gi.repository import Gdk
 from gi.repository import GLib
 
 import pyautogui
+
+# Notes on Gdk
+# http://openbooks.sourceforge.net/books/wga/gdk.html
 EventType = Gdk.EventType
 CursorType = Gdk.CursorType
 
@@ -182,15 +185,37 @@ class simulate:
         sleep(0.05)
         pyautogui.typewrite(['tab',])
 
-def run(*text_to_type):
+    @staticmethod
+    def type(text):
+        sleep(0.05)
+        pyautogui.typewrite(text, interval=0.05)
+
+def type_at_clicks(*text_to_type):
+    "Type text at locations specified by mouseclicks"
     number_of_clicks = len(text_to_type)
     clicks = get_clicks_xy(number_of_clicks)
     if len(clicks) != number_of_clicks:
-        raise Exception("Error: Didn't receive {} mouse clicks".format(number_of_clicks))
+        msg = "Error: Didn't receive {} mouse clicks"
+        raise EnvironmentError(msg.format(number_of_clicks))
     sleep(2.0)
     for click,text in zip(clicks, text_to_type):
         simulate.click_and_type(click[0], click[1], text)
-    simulate.enter_key()
+    # simulate.enter_key()
 
-# run('first text', 'second text here')
-# http://openbooks.sourceforge.net/books/wga/gdk.html
+def click_and_type(*text_to_type, sep=simulate.tab_key, end=simulate.enter_key):
+    """Type text at locations specified by one click.
+
+    Separate each text element by calling the sep function.
+    """
+    clicks = get_clicks_xy(1)
+    if len(clicks) != 1:
+        msg = "Error: Didn't receive a mouse click"
+        raise EnvironmentError(msg)
+    sleep(2.0)
+    c = clicks[0]
+    simulate.click_and_type(c[0], c[1], text_to_type[0])
+    for text in text_to_type[1:]:
+        sep()
+        simulate.type(text)
+    end()
+
