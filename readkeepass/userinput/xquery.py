@@ -107,7 +107,7 @@ class TotalTK:
 
 def run(prompt=DEFAULT_PROMPT, button=DEFAULT_BUTTON, password=False):
     if password:
-        entry_kwargs = {'show' : '*'}
+        entry_kwargs = {'show' : '•'}
     else:
         entry_kwargs = {}
     window = TotalTK(prompt, button, entry_kwargs)

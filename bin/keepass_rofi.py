@@ -8,19 +8,10 @@ and username with clipboard selection.
 import argparse
 import re
 from collections import OrderedDict
-# import getpass
-# import sys
 
 import readkeepass as rk
 from tabulate import tabulate
 
-# def get_password():
-#     if sys.stdin.isatty():
-#         p = getpass.getpass('Using getpass: ')
-#     else:
-#         print('Using readline')
-#         p = sys.stdin.readline().rstrip()
-#     return p
 
 def build_rofi_input(filename, password='', keyfile=''):
     """Create a dictionary from a keepass database file.
@@ -52,22 +43,57 @@ def launch_rofi(kdb_path, password='', keyfile=''):
     key, res = rk.rofi.run(d)
     return key, res
 
-def parse_args():
+def parse_args(default_output='autotype', default_input='xquery'):
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument('--filename', type=str, required=True)
-    parser.add_argument('--keyfile', type=str)
+    parser.add_argument(
+        '-f', '--filename',
+        type = str,
+        required = True,
+        help = 'The keepass database file',
+    )
+    parser.add_argument(
+        '-k', '--keyfile',
+        type = str,
+        help = 'The keyfile corresponding to the keepass database'
+    )
+    parser.add_argument(
+        '-o', '--output',
+        type = str,
+        choices = ('copy', 'autotype', 'stdout'),
+        default = default_output,
+        help = ('Output username & password with this method.'
+                "\nDefaults to '{}'".format(default_output))
+    )
+    parser.add_argument(
+        '-pw', '--pw-query',
+        type = str,
+        choices = ('xquery', 'stdin', 'pyautogui'),
+        default = default_input,
+        help = ('Output username & password with this method.'
+                "\nDefaults to '{}'".format(default_input))
+    )
+
     return parser.parse_args()
+
+def pw_query(db_path, query_fn_name):
+    "Query for a password"
+    db_name = db_path.split('/')[-1]
+    fn = getattr(rk.userinput, query_fn_name)
+    pw = fn(db_name)
+    if pw:
+        return pw
+    raise ValueError('No password given!')
 
 def main():
     args = parse_args()
-    db_name = args.filename.split('/')[-1]
-    pw = rk.xquery.run(prompt='Password for {}:'.format(db_name),
-                       button='OK', password=True)
-    if not pw:
-        print('No password given!')
+    
+    try:
+        pw = pw_query(args.filename, args.pw_query)
+    except ValueError as e:
+        print(e)
         return
 
     try:
@@ -80,7 +106,7 @@ def main():
         return
 
     try:
-        rk.xoutput.autotype(res.username, res.password)
+        getattr(rk.xoutput, args.output)(res.username, res.password)
     except Exception as e:
         print(e)
 

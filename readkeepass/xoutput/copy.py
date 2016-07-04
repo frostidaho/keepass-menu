@@ -16,7 +16,7 @@ class _copy:
     def primary(txt):
         return _copy._xsel(txt, 'primary')
 
-def run(username, password):
+def run(username, password, *pargs, **kwargs):
     """Copy username and password to the clipboards.
 
     usename is copied to the clipboard (Ctrl-v)
