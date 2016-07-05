@@ -59,6 +59,7 @@ def parse_args(default_output='autotype', default_input='xquery'):
         type = str,
         help = 'The keyfile corresponding to the keepass database'
     )
+    
     parser.add_argument(
         '-o', '--output',
         type = str,
@@ -76,6 +77,22 @@ def parse_args(default_output='autotype', default_input='xquery'):
                 "\nDefaults to '{}'".format(default_input))
     )
 
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        '-kr', '--key-ring',
+        help="Use keyring for pw retrieval.",
+        action="store_true",
+    )
+    group.add_argument(
+        '-kd', '--key-ring-delete',
+        help="Remove keyring entry for filename.",
+        action="store_true",
+    )
+    parser.add_argument(
+        '-ks', '--key-ring-set',
+        help="Add keyring entry for filename.",
+        action="store_true",
+    )
     return parser.parse_args()
 
 def pw_query(db_path, query_fn_name):
@@ -87,17 +104,48 @@ def pw_query(db_path, query_fn_name):
         return pw
     raise ValueError('No password given!')
 
+def credentials_from_keyring(ring, filename):
+    cred = ring.get_credentials()
+    try:
+        return cred.password, cred.keyfile
+    except AttributeError:
+        print('Key for {} does not exist in keyring'.format(filename))
+        return '', ''
+
 def main():
     args = parse_args()
-    
+    keyfile = args.keyfile
+    pw = ''
+
+    if args.key_ring_delete or args.key_ring or args.key_ring_set:
+        ring = rk.keyring.KPKeyring(args.filename, keyfile)
+        ring_keyfile = ''
+        ring_pw = ''
+        
+    if args.key_ring_delete:
+        ring.delete_item()
+    elif args.key_ring:         # Can not get key if deleted
+        ring_pw, ring_keyfile = credentials_from_keyring(ring, args.filename)
+        pw = ring_pw
+        keyfile = keyfile if keyfile else ring_keyfile
+        
     try:
-        pw = pw_query(args.filename, args.pw_query)
+        if not pw:
+            pw = pw_query(args.filename, args.pw_query)
     except ValueError as e:
         print(e)
         return
 
+    if args.key_ring_set:
+        if (keyfile, pw) != (ring_keyfile, ring_pw):
+            ring.keyfile = keyfile
+            ring.set_credentials(pw)
+
+    # if not keyfile:
+    #     keyfile = args.keyfile
+        
     try:
-        key, res = launch_rofi(args.filename, pw, args.keyfile)
+        key, res = launch_rofi(args.filename, pw, keyfile)
         msg = 'Selected: {} ({}) - {}'.format(res.title, res.url, res.username)
         print(msg)
         rk.xoutput.notify_send(msg)

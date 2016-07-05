@@ -2,6 +2,7 @@ import readkeepass.kdb
 import readkeepass.userinput
 import readkeepass.rofi
 import readkeepass.xoutput
+import readkeepass.keyring
 
 load = kdb.load
 KPEntry = kdb.KPEntry

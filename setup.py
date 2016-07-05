@@ -24,6 +24,7 @@ setup(
         "pycrypto>=2.6.1",
         "tabulate>=0.7.5",
         "PyAutoGUI>=0.9.33",
+        "SecretStorage>=2.2.1",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
