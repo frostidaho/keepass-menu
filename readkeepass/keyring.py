@@ -104,10 +104,10 @@ class Keyring:
         self.coll.delete()
         
 class KPKeyring(Keyring):
-    def __init__(self, db, keyfile=''):
+    def __init__(self, db, keyfile='', collection_name='keepass-menu'):
         self.db = db
         self.keyfile = keyfile
-        super().__init__('keepass-menu')
+        super().__init__(collection_name)
 
     def _get_item_tuple(self):
         return get_item(self.label, self.coll)

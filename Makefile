@@ -42,7 +42,8 @@ tests:
 	@echo "----------------------------------------"
 	@echo "Running tests for python3"
 	@echo "----------------------------------------"
-	python "$(project_dir)tests/t1.py"
+	python "$(project_dir)tests/test_keepass_db.py"
+	python "$(project_dir)tests/test_keyring.py"
 
 .PHONY: clean
 clean:
