@@ -44,6 +44,7 @@ tests:
 	@echo "----------------------------------------"
 	python "$(project_dir)tests/test_keepass_db.py"
 	python "$(project_dir)tests/test_keyring.py"
+	python "$(project_dir)tests/test_rofi.py"
 
 .PHONY: clean
 clean:

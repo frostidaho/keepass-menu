@@ -9,6 +9,12 @@ def _get_rofi_cmd(n_lines_per_key, entry_sep):
         cmd = ('rofi', '-dmenu', '-i')
     return cmd
 
+def _prepare_stdin_dict(stdin_dict, n_lines_per_key):
+    stdin_dict = OrderedDict((k.rstrip(),v) for k,v in stdin_dict.items())
+    if n_lines_per_key == -1:
+        n_lines_per_key = max(key.count('\n') for key in  stdin_dict) + 1
+    return stdin_dict, n_lines_per_key
+
 def run(stdin_dict, n_lines_per_key=-1, entry_sep='+'):
     """Launch rofi and return its output.
 
@@ -26,9 +32,10 @@ def run(stdin_dict, n_lines_per_key=-1, entry_sep='+'):
     Choose something that will not likely appear in any of the keys.
     #TODO Replace any instance of entry_sep in keys with some other character.
     """
-    stdin_dict = OrderedDict((k.rstrip(),v) for k,v in stdin_dict.items())
-    if n_lines_per_key == -1:
-        n_lines_per_key = next(iter(stdin_dict)).count('\n') + 1
+    # stdin_dict = OrderedDict((k.rstrip(),v) for k,v in stdin_dict.items())
+    # if n_lines_per_key == -1:
+    #     n_lines_per_key = next(iter(stdin_dict)).count('\n') + 1
+    stdin_dict, n_lines_per_key = _prepare_stdin_dict(stdin_dict, n_lines_per_key)
 
     cmd = _get_rofi_cmd(n_lines_per_key, entry_sep)
     if n_lines_per_key == 1:

@@ -65,7 +65,20 @@ class TestLoading(unittest.TestCase):
 
     def test_main_loader(self):
         self.assertEqual(entries[0].as_dict, dentry_0)
-        
+
+db_path = path.join(data_dir, 'db2.kdbx')
+db_pw = 'testpass1234'
+entries_literal = (
+    rkp.kdb.KPEntry({'password': 'andchill', 'title': 'Netflix', 'url': '', 'notes': '', 'groupname': 'Root', 'username': 'netflix-user@example.com'}),
+    rkp.kdb.KPEntry({'password': 'asdf', 'title': 'Google', 'url': '', 'notes': 'Google is a big thing these days.', 'groupname': 'Root', 'username': 'googleuser@mydomain.net'}),
+)
+
+class TestDB2(unittest.TestCase):
+    def test_db_loader(self):
+        entries_loaded = rkp.load(db_path, db_pw)
+        for ent_load, ent_lit in zip(entries_loaded, entries_literal):
+            self.assertEqual(ent_load.as_dict, ent_lit.as_dict)
+
 try:
     print('Running tests for {}'.format(__file__))
 except NameError:
