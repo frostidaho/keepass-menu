@@ -3,10 +3,10 @@ from collections import OrderedDict
 
 def _get_rofi_cmd(n_lines_per_key, entry_sep):
     if n_lines_per_key > 1:
-        cmd = ('rofi', '-dmenu', '-i', '-eh', str(n_lines_per_key),
+        cmd = ('rofi', '-fullscreen', '-dmenu', '-i', '-eh', str(n_lines_per_key),
                '-sep', entry_sep)
     else:
-        cmd = ('rofi', '-dmenu', '-i')
+        cmd = ('rofi', '-fullscreen', '-dmenu', '-i')
     return cmd
 
 def _prepare_stdin_dict(stdin_dict, n_lines_per_key):
