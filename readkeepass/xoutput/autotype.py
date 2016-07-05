@@ -6,6 +6,10 @@ gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
 from gi.repository import GLib
 
+import readkeepass.utils as _utils
+_logger = _utils.get_logger(__name__)
+_logoutput = _utils.LoggerD(__name__, _utils.logging.DEBUG)
+
 import pyautogui
 
 # Notes on Gdk
@@ -79,7 +83,7 @@ class Callbacks:
             if res:
                 self._process_result(res, etype)
         except Exception as e:
-            print('Exception in Callbacks.__call__:', e)
+            _logger.debug('Exception in Callbacks.__call__:', e)
             self.loopquit()
             self.exit_reason = QuitLoop('Other exception in Callbacks.__call__', e)
         return
@@ -126,8 +130,8 @@ class NClicksCB(Callbacks):
     #     eb = event.button
     #     if eb.button == RIGHT_CLICK:
     #         return QuitLoop('Right button press', event)
-    
     @staticmethod
+    @_logoutput
     def handler_button_rel(event):
         down = False
         eb = event.button
@@ -137,7 +141,8 @@ class NClicksCB(Callbacks):
             return QuitLoop('Right button release', event)
         return None
 
-    @staticmethod
+    @staticmethod    
+    @_logoutput
     def handler_key(event):
         if event.key.keyval == Gdk.KEY_Escape:
             return QuitLoop('Escape key', event)
@@ -153,6 +158,7 @@ def grab_input(callbacks):
     loop.run()
     return callbacks
 
+@_logoutput
 def get_clicks_xy(number_of_clicks=2):
     def xy_last_n_clicks(clicklist, n):
         clicks = clicklist[-n:]

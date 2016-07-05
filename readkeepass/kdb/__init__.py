@@ -1,7 +1,10 @@
 import io
 from collections import namedtuple
 from collections import OrderedDict
+
+import readkeepass.utils as _utils
 from . import libkeepass
+_logsensitive = _utils.SensitiveLoggerD(__name__, _utils.logging.DEBUG)
 
 def _ntuple_from_dict(d, NamedTuple):
     """Return instance of NamedTuple based on dict d.
@@ -13,6 +16,7 @@ def _ntuple_from_dict(d, NamedTuple):
         **{k:v for k,v in d.items() if k in NamedTuple._fields}
     )
 
+@_logsensitive
 def load_entries(filename, password='', keyfile=''):
     "Return the entries in the keepass-db as an iterable of dicts"
     def load_kdb(filename, password, keyfile):

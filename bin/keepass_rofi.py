@@ -12,6 +12,13 @@ from collections import OrderedDict
 import readkeepass as rk
 from tabulate import tabulate
 
+DEBUG = False
+
+if DEBUG:
+    import logging
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(logging.StreamHandler())
 
 def build_rofi_input(filename, password='', keyfile=''):
     """Create a dictionary from a keepass database file.
