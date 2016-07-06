@@ -12,7 +12,7 @@ from collections import OrderedDict
 import readkeepass as rk
 from tabulate import tabulate
 
-DEBUG = False
+DEBUG = True
 
 if DEBUG:
     import logging
@@ -36,7 +36,7 @@ def build_rofi_input(filename, password='', keyfile=''):
                 to_format.append(tuple(vals))
         return to_format
 
-    entries = rk.load(filename, password, keyfile)
+    entries = rk.kdb.load(filename, password, keyfile)
     entry_layout = (('title', 'url'), ('username', 'groupname'), ('notes', None))
 
     to_format = tabulate_list(entries, entry_layout)
@@ -156,8 +156,9 @@ def main():
         msg = 'Selected: {} ({}) - {}'.format(res.title, res.url, res.username)
         print(msg)
         rk.xoutput.notify_send(msg)
-    except AttributeError:
+    except AttributeError as e:
         print('Rofi did not return a key.')
+        print(e)
         return
 
     try:

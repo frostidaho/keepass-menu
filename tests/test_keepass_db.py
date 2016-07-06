@@ -19,7 +19,7 @@ ex_credentials = {
     'keyfile' : ex_key,
 }
 
-entries = rkp.load(**ex_credentials)
+entries = kdb.load(**ex_credentials)
 dentries = list(kdb.load_entries(**ex_credentials))
 
 dentry_0 = {
@@ -31,7 +31,7 @@ dentry_0 = {
     'username': 'doswag@gmail.com',
 }
 
-entry_0 = rkp.KPEntry(dentry_0)
+entry_0 = kdb.KPEntry(dentry_0)
 
 dformatted_0 = {
     'groupname': '[Root]',
@@ -75,7 +75,7 @@ entries_literal = (
 
 class TestDB2(unittest.TestCase):
     def test_db_loader(self):
-        entries_loaded = rkp.load(db_path, db_pw)
+        entries_loaded = kdb.load(db_path, db_pw)
         for ent_load, ent_lit in zip(entries_loaded, entries_literal):
             self.assertEqual(ent_load.as_dict, ent_lit.as_dict)
 
