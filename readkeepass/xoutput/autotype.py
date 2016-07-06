@@ -4,6 +4,8 @@ from time import sleep
 import gi
 gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 from gi.repository import GLib
 
 import readkeepass.utils as _utils
@@ -32,12 +34,20 @@ def _get_seat_n_window():
     "Return a Gdk seat (essentially input devices) and window"
     display = Gdk.Display.get_default()
     screen = display.get_default_screen()
+    visual = screen.get_rgba_visual()
+    # see gnome-screenshot source: create_select_window()
+    # screenshot-area-selection.c
+    win = Gtk.Window(type=Gtk.WindowType.POPUP)
+    if screen.is_composited():
+        win.set_visual(visual)
+        win.set_app_paintable(True)
+    win.move(-100, -100)
+    win.resize(10, 10)
+    win.show()
+    win.set_accept_focus(True)
+    win.set_can_focus(True)
     seat = display.get_default_seat()
-    win = screen.get_active_window()
-    win = win.get_toplevel()
-    win.focus(Gdk.CURRENT_TIME)
-    # win.raise_()
-    return seat, win
+    return seat, win.get_window()
 
 def _grab_seat(seat, win, cursor_type=CursorType.CROSSHAIR):
     "Grab the pointers and keyboard"
