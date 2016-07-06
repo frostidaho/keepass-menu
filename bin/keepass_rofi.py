@@ -50,7 +50,7 @@ def launch_rofi(kdb_path, password='', keyfile=''):
     key, res = rk.rofi.run(d)
     return key, res
 
-def parse_args(default_output='autotype', default_input='xquery'):
+def parse_args():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -66,19 +66,22 @@ def parse_args(default_output='autotype', default_input='xquery'):
         type = str,
         help = 'The keyfile corresponding to the keepass database'
     )
-    
+
+    default_output = rk.xoutput.backends[0]
     parser.add_argument(
         '-o', '--output',
         type = str,
-        choices = ('copy', 'autotype', 'autotype_tab', 'stdout'),
+        choices = rk.xoutput.backends,
         default = default_output,
         help = ('Output username & password with this method.'
                 "\nDefaults to '{}'".format(default_output))
     )
+
+    default_input = rk.userinput.backends[0]
     parser.add_argument(
         '-pw', '--pw-query',
         type = str,
-        choices = ('xquery', 'stdin', 'pyautogui'),
+        choices = rk.userinput.backends,
         default = default_input,
         help = ('Output username & password with this method.'
                 "\nDefaults to '{}'".format(default_input))
@@ -155,7 +158,7 @@ def main():
         key, res = launch_rofi(args.filename, pw, keyfile)
         msg = 'Selected: {} ({}) - {}'.format(res.title, res.url, res.username)
         print(msg)
-        rk.xoutput.notify_send(msg)
+        rk.utils.notify_send(msg)
     except AttributeError as e:
         print('Rofi did not return a key.')
         print(e)

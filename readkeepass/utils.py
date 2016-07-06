@@ -1,6 +1,11 @@
 import logging
+import subprocess as _subprocess
 from inspect import signature as _signature
 from functools import wraps as _wraps
+
+def notify_send(message):
+    "Send desktop notification using 'notify-send'"
+    _subprocess.run(['notify-send', message])
 
 def _preserve_sig(fn):
     """Preserve the signature of the wrapped fn.

@@ -28,3 +28,6 @@ def pyautogui(db_name='', *pargs, **kwargs):
     prompt='Enter password for {}:'.format(db_name)
     return pyautogui.password(text=prompt, title='keepass-menu', mask='•')
 
+backends = ['stdin', 'xquery', 'pyautogui']
+__all__ = backends
+

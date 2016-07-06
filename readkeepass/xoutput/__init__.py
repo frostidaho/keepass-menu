@@ -1,6 +1,4 @@
 import sys as _sys
-import subprocess as _subprocess
-
 from . import copy as _copy
 from . import autotype as _autotype
 _simulate = _autotype.simulate
@@ -19,6 +17,7 @@ def autotype_tab(username, password, *pargs, **kwargs):
     _autotype.click_and_type(username, password, sep=tab, end=enter)
 
 def stdout(username, password, *pargs, **kwargs):
+    "Write username and password to stdout"
     lines = [
         '@username: {}\n'.format(username),
         '@password: {}\n'.format(password),
@@ -27,6 +26,5 @@ def stdout(username, password, *pargs, **kwargs):
         lines.append('@{}: {}\n'.format(k, v))
     _sys.stdout.writelines(lines)
 
-def notify_send(message):
-    _subprocess.run(['notify-send', message])
-
+backends = ['stdout', 'copy', 'autotype', 'autotype_tab']
+__all__ = backends
