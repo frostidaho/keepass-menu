@@ -24,7 +24,6 @@ setup(
     license="GPL",
     keywords="keepass library, rofi, keepass, dmenu",
     url="https://github.com/frostidaho",  # project home page, if any
-    scripts=['bin/keepass_rofi.py',],
     install_requires=[
         "lxml>=3.2.1",
         "pycrypto>=2.6.1",
