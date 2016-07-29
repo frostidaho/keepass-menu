@@ -1,33 +1,43 @@
 import sys as _sys
 from getpass import getpass as _getpass
-
-import readkeepass.utils
+from readkeepass import utils as _utils
 from . import xquery as _xquery
-_logoutput = readkeepass.utils.SensitiveLoggerD(__name__)
 
-@_logoutput
+
+userinput = _utils.root('userinput')
+
+@userinput.register
 def stdin(db_name='', *pargs, **kwargs):
-    "Return password from terminal or stdin"
+    """Read password from stdin.
+
+    If stdin is a tty a prompt will be displayed.
+    It returns the entered password as a string.
+    """
     if _sys.stdin.isatty():
         p = _getpass('Enter password for {}: '.format(db_name))
     else:
         p = _sys.stdin.readline().rstrip()
     return p
 
-@_logoutput
-def xquery(db_name='', *pargs, **kwargs):
-    "Return password from a popup TK window (xquery)"
-    prompt='Enter password for {}:'.format(db_name)
-    button='OK'
-    password=True
+
+@userinput.register
+def tk(db_name='', *pargs, **kwargs):
+    """Query user for a password using a tk window.
+
+    It returns the entered password as a string.
+    """
+    prompt = 'Enter password for {}:'.format(db_name)
+    button = 'OK'
+    password = True
     return _xquery.run(prompt, button, password)
 
-@_logoutput
-def pyautogui(db_name='', *pargs, **kwargs):
+
+@userinput.register
+def pymsgbox(db_name='', *pargs, **kwargs):
+    """Query user for a password using the graphical pymsgbox.
+
+    It returns the entered password as a string.
+    """
     import pyautogui
-    prompt='Enter password for {}:'.format(db_name)
+    prompt = 'Enter password for {}:'.format(db_name)
     return pyautogui.password(text=prompt, title='keepass-menu', mask='•')
-
-backends = ['stdin', 'xquery', 'pyautogui']
-__all__ = backends
-

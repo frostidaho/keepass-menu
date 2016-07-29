@@ -1,10 +1,17 @@
+"""
+kdb contains code to load and manipulate KeePass databases.
+
+Most users should just call kdb.load()
+"""
 import io
-from collections import namedtuple
-from collections import OrderedDict
+from collections import namedtuple as _namedtuple, UserDict as _UserDict
+from collections import OrderedDict as _OrderedDict
+from itertools import chain as _chain, count as _count
 
 import readkeepass.utils as _utils
 from . import libkeepass
 _logsensitive = _utils.SensitiveLoggerD(__name__, _utils.logging.DEBUG)
+
 
 def _ntuple_from_dict(d, NamedTuple):
     """Return instance of NamedTuple based on dict d.
@@ -13,16 +20,17 @@ def _ntuple_from_dict(d, NamedTuple):
     found in the dictionary d.
     """
     return NamedTuple(
-        **{k:v for k,v in d.items() if k in NamedTuple._fields}
+        **{k: v for k, v in d.items() if k in NamedTuple._fields}
     )
 
+
 @_logsensitive
-def load_entries(filename, password='', keyfile=''):
+def load_entries(db, keyfile='', password=''):
     "Return the entries in the keepass-db as an iterable of dicts"
-    def load_kdb(filename, password, keyfile):
+    def load_kdb(db, password, keyfile):
         "Return the loaded kdb"
-        # kdb = libkeepass.open(filename, password='pass')
-        with io.open(filename, 'rb') as stream:
+        # kdb = libkeepass.open(db, password='pass')
+        with io.open(db, 'rb') as stream:
             signature = libkeepass.common.read_signature(stream)
             cls = libkeepass.get_kdb_reader(signature)
             kdb = cls(stream, password=password, keyfile=keyfile)
@@ -31,14 +39,14 @@ def load_entries(filename, password='', keyfile=''):
 
     def entry_to_dict(entry):
         strs = entry.findall('String')
-        d = {str(s.Key).lower() : str(s.Value) for s in strs}
+        d = {str(s.Key).lower(): str(s.Value) for s in strs}
         try:
             d['groupname'] = str(entry.getparent().Name)
         except AttributeError:  # If there is no group it is deleted or something
             return None
         return d
 
-    kdb = load_kdb(filename, password, keyfile)
+    kdb = load_kdb(db, password, keyfile)
     entries = kdb.obj_root.findall('.//Entry')
     entries2 = []
     for e in entries:
@@ -47,15 +55,16 @@ def load_entries(filename, password='', keyfile=''):
             entries2.append(d)
     return entries2
 
+
 class StringElements:
     "Formatter class for a KeePass entry dictionary."
     maxlen_longest = 40
     maxlen_normal = 30
-    
+
     def __init__(self, d_entry):
         """\
         Format key,value pairs in d_entry using the method StringElements.key(value).
-        
+
         You only need to define methods for those keys you want to transform.
         If no method is defined for a key, the transformation is just the identity fn.
 
@@ -76,7 +85,7 @@ class StringElements:
 
     def format(self):
         d_formatted = {}
-        for k,v in self.d_entry.items():
+        for k, v in self.d_entry.items():
             try:
                 if v:
                     d_formatted[k] = getattr(self, k)(v)
@@ -115,12 +124,12 @@ class StringElements:
 
     @staticmethod
     def truncate_str(s, maxlen=None, append='...'):
-            if maxlen is None:
-                return s
-            if len(s) <= maxlen:
-                return s
-            lapp = len(append)
-            return s[:maxlen - lapp] + append
+        if maxlen is None:
+            return s
+        if len(s) <= maxlen:
+            return s
+        lapp = len(append)
+        return s[:maxlen - lapp] + append
 
     def __str__(self):
         return str(self.d_formatted)
@@ -128,15 +137,16 @@ class StringElements:
     def __repr__(self):
         return repr(self.d_formatted)
 
-EntryFields = namedtuple(
+EntryFields = _namedtuple(
     'EntryFields',
     ['title', 'url', 'username', 'password', 'groupname'],
 )
 
-class KPEntry:
+
+class KeePassEntry:
     NamedTuple = EntryFields
     dict_formatter = lambda entry_dict: StringElements(entry_dict).format()
-    
+
     def __init__(self, entry_dict, NamedTuple=None):
         self.as_dict = entry_dict
         if NamedTuple:
@@ -161,19 +171,60 @@ class KPEntry:
 
     def __str__(self):
         fields = []
-        for k,v in self.as_formatted_dict.items():
+        for k, v in self.as_formatted_dict.items():
             if k != 'password':
-                fields.append('{} -> {}'.format(k,v))
+                fields.append('{} -> {}'.format(k, v))
         return '\n'.join(fields)
 
     def __repr__(self):
-        return 'KPEntry(' + repr(self.as_dict) + ')'
+        name = str(self.__class__.__name__)
+        return name + '(' + repr(self.as_dict) + ')'
 
-def load(filename, password='', keyfile=''):
-    entries = load_entries(
-        filename,
-        password=password,
-        keyfile=keyfile,
-    )
-    return [KPEntry(x) for x in entries]
 
+class KeePassDB(_OrderedDict):
+    def __init__(self, *pargs, db_path='', entries=None):
+        super().__init__(*pargs)
+        if db_path:
+            entries = entries if entries is not None else []
+            new_tup_tup = ((db_path, entries),)
+            self.update(new_tup_tup)
+            return
+        if entries is None:
+            return
+        # Make following key a string
+        # since all of the other keys will be strings
+        key = next(x for x in map(str, _count()) if x not in self)
+        self[key] = entries
+
+    @property
+    def paths(self):
+        return list(self.keys())
+
+    @property
+    def entries(self):
+        return list(_chain(*self.values()))
+
+
+@_utils.root.register(name='load_db')
+def load(db, keyfile='', password=''):
+    """Extract the entries from the KeePass database corresponding to filename.
+
+    It returns a named tuple with fields `filename`, and `entries`
+
+    :param filename: the path of the KeePass database (db)
+    :param password: the password for the db (if there is no pw use '')
+    :param keyfile: the key-file for the db (if there is no key-file use '')
+    :returns: a named tuple containing (db filename, db entries)
+    :rtype: KeePassDB
+
+    :Example:
+
+    >>> db = readkeepass.kdb.load(filename='db2.kdbx', password='testpass1234')
+    >>> db.filename
+    'db2.kdbx'
+    >>> db.entries[0]
+    KeePassEntry({'url': '', 'notes': '', 'password': 'andchill', 'title': 'Netflix', 'groupname': 'Root', 'username': 'netflix-user@example.com'})
+    """
+    entries = load_entries(db, keyfile, password)
+    return KeePassDB(db_path=db, entries=[KeePassEntry(x) for x in entries])
+    # return _utils.KeePassDB(db, [KeePassEntry(x) for x in entries])

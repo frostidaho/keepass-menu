@@ -7,9 +7,15 @@ setup(
         "readkeepass",
         "readkeepass.kdb",
         "readkeepass.kdb.libkeepass",
-        "readkeepass.xoutput",
+        "readkeepass.output",
         "readkeepass.userinput",
+        "keepass_menu",
     ],
+    entry_points = {
+        'console_scripts': [
+            'keepass-menu = keepass_menu.__main__:main'
+        ]
+    },    
     author="Idaho Frost",
     author_email="frostidaho@gmail.com",
     description=("A library to read KeePass 1.x/KeePassX (v3) and KeePass "

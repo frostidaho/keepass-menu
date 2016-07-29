@@ -34,8 +34,10 @@ class TestNLinesPerKey(unittest.TestCase):
         dout, n_lines_per_key = rk.rofi._prepare_stdin_dict(d, nlines)
         self.assertEqual(n_lines_per_key, nlines)
 
-try:
-    print('Running tests for {}'.format(__file__))
-except NameError:
-    pass
-unittest.main()
+
+if __name__ == '__main__':
+    try:
+        print('Running tests for {}'.format(__file__))
+    except NameError:
+        pass
+    unittest.main()

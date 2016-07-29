@@ -20,7 +20,7 @@ EventType = Gdk.EventType
 CursorType = Gdk.CursorType
 
 # KEY_PRESS      = EventType.KEY_PRESS
-KEY_RELEASE    = EventType.KEY_RELEASE
+KEY_RELEASE = EventType.KEY_RELEASE
 # BUTTON_PRESS   = EventType.BUTTON_PRESS
 BUTTON_RELEASE = EventType.BUTTON_RELEASE
 
@@ -29,6 +29,7 @@ RIGHT_CLICK = 3
 
 ClickTuple = namedtuple('ClickTuple', ('x', 'y', 'down', 'button', 'state'))
 QuitLoop = namedtuple('QuitLoop', ('reason', 'gdk_event',))
+
 
 def _get_seat_n_window():
     "Return a Gdk seat (essentially input devices) and window"
@@ -49,6 +50,7 @@ def _get_seat_n_window():
     seat = display.get_default_seat()
     return seat, win.get_window()
 
+
 def _grab_seat(seat, win, cursor_type=CursorType.CROSSHAIR):
     "Grab the pointers and keyboard"
     cursor = Gdk.Cursor(cursor_type)
@@ -63,16 +65,20 @@ def _grab_seat(seat, win, cursor_type=CursorType.CROSSHAIR):
                    prep_func, prep_data)
     return gb
 
+
 def _get_loop(seat):
     "Return a tuple of (main loop, quit loop fn)"
     loop = GLib.MainLoop()
+
     def loopquit():
         seat.ungrab()
         loop.quit()
     return loop, loopquit
 
+
 class Callbacks:
     "The main event loop runs Callbacks.__call__ for each event"
+
     def __init__(self, eventtype_to_callback, loopquit=None):
         self.eventtype_to_callback = eventtype_to_callback
         self.output = defaultdict(list)
@@ -81,7 +87,7 @@ class Callbacks:
 
     def __call__(self, event, *pargs, **kwargs):
         d_callback = self.eventtype_to_callback
-        
+
         etype = event.get_event_type()
         try:
             cb = d_callback[etype]
@@ -107,6 +113,7 @@ class Callbacks:
 
 
 class NClicksCB(Callbacks):
+
     def __init__(self, n_button_clicks=2, loopquit=None):
         """Create handler that records click events.
 
@@ -115,15 +122,15 @@ class NClicksCB(Callbacks):
         will be recorded.
 
         Hitting Escape or the right mouse button will break out of loop
-        
+
         self.output stores events and is a dict of lists.
         The keys of self.output are eventtypes in Gdk.EventType
         e.g., button_rel_events = self.output[Gdk.EventType.BUTTON_RELEASE]
         """
         self.n_button_clicks = n_button_clicks
         evtype_to_cb = {
-            BUTTON_RELEASE : self.handler_button_rel,
-            KEY_RELEASE : self.handler_key,
+            BUTTON_RELEASE: self.handler_button_rel,
+            KEY_RELEASE: self.handler_key,
         }
         super().__init__(evtype_to_cb, loopquit)
 
@@ -151,12 +158,13 @@ class NClicksCB(Callbacks):
             return QuitLoop('Right button release', event)
         return None
 
-    @staticmethod    
+    @staticmethod
     @_logoutput
     def handler_key(event):
         if event.key.keyval == Gdk.KEY_Escape:
             return QuitLoop('Escape key', event)
         return None
+
 
 def grab_input(callbacks):
     seat, win = _get_seat_n_window()
@@ -167,6 +175,7 @@ def grab_input(callbacks):
     Gdk.event_handler_set(callbacks)
     loop.run()
     return callbacks
+
 
 @_logoutput
 def get_clicks_xy(number_of_clicks=2):
@@ -179,6 +188,7 @@ def get_clicks_xy(number_of_clicks=2):
     # disp.close()
     res = cbs.output[BUTTON_RELEASE]
     return xy_last_n_clicks(res, number_of_clicks)
+
 
 class simulate:
     click = pyautogui.click
@@ -194,17 +204,18 @@ class simulate:
     @staticmethod
     def enter_key():
         sleep(0.05)
-        pyautogui.typewrite(['enter',])
+        pyautogui.typewrite(['enter', ])
 
     @staticmethod
     def tab_key():
         sleep(0.05)
-        pyautogui.typewrite(['tab',])
+        pyautogui.typewrite(['tab', ])
 
     @staticmethod
     def type(text):
         sleep(0.05)
         pyautogui.typewrite(text, interval=0.05)
+
 
 def type_at_clicks(*text_to_type):
     "Type text at locations specified by mouseclicks"
@@ -214,9 +225,10 @@ def type_at_clicks(*text_to_type):
         msg = "Error: Didn't receive {} mouse clicks"
         raise EnvironmentError(msg.format(number_of_clicks))
     sleep(2.0)
-    for click,text in zip(clicks, text_to_type):
+    for click, text in zip(clicks, text_to_type):
         simulate.click_and_type(click[0], click[1], text)
     # simulate.enter_key()
+
 
 def click_and_type(*text_to_type, sep=simulate.tab_key, end=simulate.enter_key):
     """Type text at locations specified by one click.
@@ -234,4 +246,3 @@ def click_and_type(*text_to_type, sep=simulate.tab_key, end=simulate.enter_key):
         sep()
         simulate.type(text)
     end()
-

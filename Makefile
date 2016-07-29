@@ -37,14 +37,22 @@ install:
 uninstall:
 	-pip uninstall keepass-menu
 
+# .PHONY: tests
+# tests:
+# 	@echo "----------------------------------------"
+# 	@echo "Running tests for python3"
+# 	@echo "----------------------------------------"
+# 	python "$(project_dir)tests/test_keepass_db.py"
+# 	python "$(project_dir)tests/test_keyring.py"
+# 	python "$(project_dir)tests/test_keyring2.py"
+# 	python "$(project_dir)tests/test_rofi.py"
+
 .PHONY: tests
 tests:
 	@echo "----------------------------------------"
 	@echo "Running tests for python3"
 	@echo "----------------------------------------"
-	python "$(project_dir)tests/test_keepass_db.py"
-	python "$(project_dir)tests/test_keyring.py"
-	python "$(project_dir)tests/test_rofi.py"
+	py.test "$(project_dir)tests/"
 
 .PHONY: clean
 clean:

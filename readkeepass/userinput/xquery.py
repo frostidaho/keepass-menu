@@ -9,6 +9,7 @@ FONT_SPEC = ('Sans', 18)
 DEFAULT_PROMPT = 'Query:'
 DEFAULT_BUTTON = 'Go'
 
+
 def monitor_geometry():
     "Return the current monitor geometry"
     import gi
@@ -24,13 +25,15 @@ def monitor_geometry():
     screen = display.get_default_screen()
     window = screen.get_active_window()
     monitor = screen.get_monitor_at_window(window)
-    
+
     g = screen.get_monitor_geometry(monitor)
     right = g.x + g.width
     bottom = g.y + g.height
     return MonitorGeometry(g.x, right, g.y, bottom, g.width, g.height)
 
+
 class TotalTK:
+
     def __init__(self, label_txt, button_text, entry_kwargs):
         self.init_root()
         self.init_label(label_txt)
@@ -72,7 +75,7 @@ class TotalTK:
             self.frame,
             text=button_text,
             command=self.get_text_n_close,
-            width=len(button_text)+2,
+            width=len(button_text) + 2,
         )
         b.pack(side=tk.LEFT)
         self.button = b
@@ -86,7 +89,7 @@ class TotalTK:
             return self._text
         except AttributeError:
             return ''
-    
+
     def get_text_n_close(self, *pargs, **kwargs):
         self._text = self.entry.get()
         self.kill()
@@ -96,7 +99,7 @@ class TotalTK:
             geom = monitor_geometry()
             self.root.update_idletasks()
             xposition = int(geom.width - self.root.winfo_reqwidth()) // 2 + geom.left
-            yposition = int(0.3 * (geom.bottom - geom.top))  - self.root.winfo_reqheight()
+            yposition = int(0.3 * (geom.bottom - geom.top)) - self.root.winfo_reqheight()
             self.root.geometry('+{}+{}'.format(xposition, yposition))
         except ImportError:
             pass
@@ -105,35 +108,39 @@ class TotalTK:
         self.root.mainloop()
         return self.text
 
+
 def run(prompt=DEFAULT_PROMPT, button=DEFAULT_BUTTON, password=False):
     if password:
-        entry_kwargs = {'show' : '•'}
+        entry_kwargs = {'show': '•'}
     else:
         entry_kwargs = {}
     window = TotalTK(prompt, button, entry_kwargs)
     text = window.run()
     return text
 
-if __name__ == '__main__':
-    def parse_args():
-        parser = argparse.ArgumentParser(description='Display a graphical window'+\
-                                         ' with a text entry box. Print the '+\
-                                         'input text to stdout.')
+# if __name__ == '__main__':
+#     def parse_args():
+#         parser = argparse.ArgumentParser(description='Display a graphical window' +
+#                                          ' with a text entry box. Print the ' +
+#                                          'input text to stdout.')
 
-        parser.add_argument('-p', '--prompt',
-                            help="Set the prompt text on the left side of the box"+\
-                            ". Defaults to '{}'".format(DEFAULT_PROMPT),
-                            default=DEFAULT_PROMPT
-        )
-        parser.add_argument('-b', '--button',
-                            help="Set the button text to the right of the box. "+\
-                            "Defaults to '{}'".format(DEFAULT_BUTTON),
-                            default=DEFAULT_BUTTON
-        )
-        parser.add_argument('-pw', '--password', help="Show *** in entry box", action='store_true')
-        return vars(parser.parse_args())
-    
-    args = parse_args()
-    res = run(**args)
-    print(res)
+#         parser.add_argument('-p', '--prompt',
+#                             help="Set the prompt text on the left side of the box" +
+#                             ". Defaults to '{}'".format(DEFAULT_PROMPT),
+#                             default=DEFAULT_PROMPT
+#                             )
+#         parser.add_argument('-b', '--button',
+#                             help="Set the button text to the right of the box. " +
+#                             "Defaults to '{}'".format(DEFAULT_BUTTON),
+#                             default=DEFAULT_BUTTON
+#                             )
+#         parser.add_argument(
+#             '-pw',
+#             '--password',
+#             help="Show *** in entry box",
+#             action='store_true')
+#         return vars(parser.parse_args())
 
+#     args = parse_args()
+#     res = run(**args)
+#     print(res)

@@ -2,4 +2,5 @@ keepass_menu.egg-info/
 __pycache__/
 build
 dist
+.cache/
 

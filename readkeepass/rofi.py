@@ -1,5 +1,9 @@
 import subprocess as sp
+import re
 from collections import OrderedDict
+from readkeepass import utils as _utils
+from tabulate import tabulate
+
 
 def _get_rofi_cmd(n_lines_per_key, entry_sep):
     if n_lines_per_key > 1:
@@ -9,11 +13,13 @@ def _get_rofi_cmd(n_lines_per_key, entry_sep):
         cmd = ('rofi', '-fullscreen', '-dmenu', '-i')
     return cmd
 
+
 def _prepare_stdin_dict(stdin_dict, n_lines_per_key):
-    stdin_dict = OrderedDict((k.rstrip(),v) for k,v in stdin_dict.items())
+    stdin_dict = OrderedDict((k.rstrip(), v) for k, v in stdin_dict.items())
     if n_lines_per_key == -1:
-        n_lines_per_key = max(key.count('\n') for key in  stdin_dict) + 1
+        n_lines_per_key = max(key.count('\n') for key in stdin_dict) + 1
     return stdin_dict, n_lines_per_key
+
 
 def run(stdin_dict, n_lines_per_key=-1, entry_sep='+'):
     """Launch rofi and return its output.
@@ -32,9 +38,6 @@ def run(stdin_dict, n_lines_per_key=-1, entry_sep='+'):
     Choose something that will not likely appear in any of the keys.
     #TODO Replace any instance of entry_sep in keys with some other character.
     """
-    # stdin_dict = OrderedDict((k.rstrip(),v) for k,v in stdin_dict.items())
-    # if n_lines_per_key == -1:
-    #     n_lines_per_key = next(iter(stdin_dict)).count('\n') + 1
     stdin_dict, n_lines_per_key = _prepare_stdin_dict(stdin_dict, n_lines_per_key)
 
     cmd = _get_rofi_cmd(n_lines_per_key, entry_sep)
@@ -52,4 +55,47 @@ def run(stdin_dict, n_lines_per_key=-1, entry_sep='+'):
 
     key = _run_process(cmd, stdin_dict, entry_sep)
     return key, stdin_dict.get(key)
+
+
+def build_rofi_input(keepass_db):
+    """Create a rofi-usable dict from a KeePassDB object.
+    
+    keepass_db is just a namedtuple with fields 'filename' and 'entries'
+
+    The keys are display strings for each entry in the keepass database 
+    The values are a namedtuple containing all of an entry's info.
+    """
+    def tabulate_list(entries, entry_layout):
+        to_format = []
+        for e in entries:
+            d = e.as_formatted_dict
+            for row in entry_layout:
+                vals = [d.get(key, ' ') for key in row]
+                vals = [x if x else ' ' for x in vals]
+                to_format.append(tuple(vals))
+        return to_format
+
+    entries = keepass_db.entries
+    entry_layout = (('title', 'url'), ('username', 'groupname'), ('notes', None))
+
+    to_format = tabulate_list(entries, entry_layout)
+    table_str = tabulate(to_format, tablefmt='plain')
+    if not table_str.endswith('\n'):
+        table_str += '\n' # Needs to have trailing newline
+        # due to the following regex. TODO This whole module needs to be looked at.
+        # It is pretty fragile.
+
+    table = re.findall(len(entry_layout) * r'.*\n', table_str)
+    return OrderedDict(zip(table, [x.as_ntuple for x in entries]))
+
+@_utils.root.register(name='rofi')
+def launch_rofi(*keepass_dbs):
+    # TODO Docstrings & rename
+    keepass_db = type(keepass_dbs[0])()
+    for d in keepass_dbs:
+        keepass_db.update(d)
+
+    totald = build_rofi_input(keepass_db)
+    return run(totald)
+
 
