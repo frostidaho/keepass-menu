@@ -30,10 +30,15 @@ def load_entries(db, keyfile='', password=''):
     def load_kdb(db, password, keyfile):
         "Return the loaded kdb"
         # kdb = libkeepass.open(db, password='pass')
+        credentials = {}
+        if keyfile:
+            credentials['keyfile'] = keyfile
+        if password:
+            credentials['password'] = password
         with io.open(db, 'rb') as stream:
             signature = libkeepass.common.read_signature(stream)
             cls = libkeepass.get_kdb_reader(signature)
-            kdb = cls(stream, password=password, keyfile=keyfile)
+            kdb = cls(stream, **credentials)
             kdb.close()
         return kdb
 
