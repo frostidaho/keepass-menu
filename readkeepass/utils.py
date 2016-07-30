@@ -7,6 +7,7 @@ from collections import namedtuple as _namedtuple
 
 KPCredentials = _namedtuple('KPCredentials', ('db', 'keyfile', 'password'))
 
+
 def notify_send(message):
     "Send desktop notification using 'notify-send'"
     _subprocess.run(['notify-send', message])
@@ -71,112 +72,89 @@ class SensitiveLoggerD(LoggerD):
         return sensitive_log
 
 
-class Registered:
+class OrderedNamespace:
+    def __init__(self, name, key_value_pairs=None):
+        self._odict = _OrderedDict()
+        self._name = name
+        if key_value_pairs is not None:
+            for k, v in key_value_pairs:
+                setattr(self, k, v)
+
+    def __eq__(self, other):
+        if not isinstance(other, OrderedNamespace):
+            return NotImplemented
+        return self._odict == other._odict
+
+    def __contains__(self, key):
+        return key in self.__dict__
+
+    def __setattr__(self, name, value):
+        if not name.startswith('_'):
+            self.__dict__['_odict'][name] = value
+        super().__setattr__(name, value)
+
+    def __iter__(self):
+        return iter(self._odict.items())
+            
+    def _repr_inner(self):
+        torep = []
+        for k, v in self:
+            if isinstance(v, OrderedNamespace):
+                torep.append(''.join(v._repr_inner()))
+            else:
+                torep.append(k)
+        inner = ', '.join(torep)
+        cls = str(self.__class__.__name__)
+        tot = [self._name, '.{', inner, '}']
+        return tot
+
+    def __repr__(self):
+        cls = str(self.__class__.__name__)
+        tot = [cls, ' :: ']
+        tot.extend(self._repr_inner())
+        return ''.join(tot)
+
+
+class Node(OrderedNamespace):
+
     def register(self, obj=None, *, name=None, overwrite=False):
         "register is a decorator that will add object to this instance"
-        reg = self.registry
         if obj is None:
             return _partial(self.register, name=name, overwrite=overwrite)
         if name is None:
             name = obj.__name__
-        if (overwrite is False) and (name in reg):
+        if (overwrite is False) and (name in self.__dict__):
             msg = "{} is already registered in {}"
             raise ValueError(msg.format(name, self))
         setattr(self, name, obj)
-        reg[name] = obj
         return obj
-
-    @property
-    def registry(self):
-        try:
-            return self._registry
-        except AttributeError:
-            self._registry = _OrderedDict()
-            return self._registry
-
-    def __repr__(self):
-        msg = '(reg = {})'.format(list(self.registry.keys()))
-        return self.__class__.__name__ + msg
-
-    # @property
-    # def registry_keys(self):
-    #     return list(self._registry.keys())
-
-
-class Node:
-    def __init__(self, name, children=None):
-        self.name = name
-        d = _OrderedDict()
-        if children is not None:
-            for name in children:
-                d[name] = self.__class__(name)
-        self._children = d
-        self._registry = _OrderedDict()
 
     def __call__(self, name, overwrite=False):
-        """Create a new child"""
-        if (overwrite is False) and (name in self._children):
-            self._raise_val_err(name)
-        obj = self.__class__(name)
-        self._children[name] = obj
-        return obj
-
-    def __getattr__(self, val):
-        try:
-            return self._children[val]
-        except:
-            msg = "{} not found in {}._children"
-            raise AttributeError(msg.format(val, self.name))
-
-    def _raise_val_err(self, new_name):
-        msg = "{} is already a child of {}"
-        raise ValueError(msg.format(new_name, self.name))
-
-    # @property
-    # def children(self):
-    #     childiter = self._flatten()
-    #     next(childiter)
-    #     return list(childiter)
-
-    def _flatten(self):
-        yield self
-        for child in self._children.values():
-            yield from child._flatten()
-
-    def __iter__(self):
-        return self._flatten()
-
-    def __repr__(self):
-        cls_name = self.__class__.__name__
-        name = "'{}'".format(self.name)
-        child_list = list(self._children)
-        if child_list:
-            children = ', children={}'.format(repr(list(self._children.values())))
+        if (overwrite is False) and (name in self.__dict__):
+            return getattr(self, name)
+            # msg = "{} is already registered in {}"
+            # raise ValueError(msg.format(name, self))
         else:
-            children = ''
-        totl = [cls_name, '(', name, children, ')']
-        return ''.join(totl)
-
-    def __str__(self):
-        return repr(self)
-
-
-class Root(Node, Registered):
-    def __init__(self, name, children=None):
-        super().__init__(name, children=children)
+            obj = self.__class__(name)
+            setattr(self, name, obj)
+            return obj
+    
+    @property
+    def node_children(self):
+        def _child():
+            for name, val in self:
+                if isinstance(val, self.__class__):
+                    yield val
+        return list(_child())
 
     @property
-    def all_registered(self):
-        # TODO Fix for arbitrarily nested objects
-        # Could have multiple nodes with same name
-        d = _OrderedDict()
-        for node in self:
-            if node.name in d:
-                msg = "Node with name {} seen multiple times"
-                raise ValueError(msg.format(node.name))
-            d[node.name] = node.registry
-        return d
+    def node_leaves(self):
+        # odict = _OrderedDict()
+        def _leaves():
+            for name, val in self:
+                if not isinstance(val, self.__class__):
+                    yield name, val
+        return _OrderedDict(_leaves())
 
 
-root = Root('root')
-
+root = Node('root')

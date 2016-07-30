@@ -7,13 +7,15 @@ from readkeepass import keyring
 
 
 rkp = utils.root
+
+@rkp.register
 class GrabCredentials:
-    registered = rkp.all_registered
-    _userinput = registered['userinput']
+    _userinput = rkp.userinput.node_leaves
     _default_inp = next(iter(_userinput))
     _keyring = rkp.KeyRing
-    
-    def __init__(self, pw_query=_default_inp, use_keyring=True, del_keyring=False, **kwargs):
+
+    def __init__(self, pw_query=_default_inp, use_keyring=True,
+                 del_keyring=False, **kwargs):
         self.use_keyring = use_keyring
         self.del_keyring = del_keyring
         self.pw_query = pw_query
@@ -33,8 +35,7 @@ class GrabCredentials:
 
     @pw_query.setter
     def pw_query(self, val):
-        backends = self._userinput.keys()
-        if val in backends:
+        if val in self._userinput:
             self._pw_query = val
         else:
             msg = "{} is not in {}".format(val, backends)
@@ -60,7 +61,4 @@ class GrabCredentials:
         return True
 
 
-__all__ = [
-    'record',
-    'rkp',
-]
+__all__ = ['rkp', 'GrabCredentials']

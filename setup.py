@@ -13,7 +13,7 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
-            'keepass-menu = keepass_menu.__main__:main'
+            'keepass-menu = keepass_menu:main'
         ]
     },    
     author="Idaho Frost",

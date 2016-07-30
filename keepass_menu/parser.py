@@ -106,12 +106,12 @@ def transform_args(args):
     args.db_paths = fnames
     return _ParsedArgs(success=True, args=args)
 
-def get_args (output, pw_query, *pargs, list_args=None):
+def get_args (output, pw_query, *pargs, test_args=None):
     parser = build(
         output=output,
         pw_query=pw_query,
     )
-    args = parser.parse_args(list_args)
+    args = parser.parse_args(test_args)
     success, args = transform_args(args)
     if not success:
         print('Must give at least one database file path!')

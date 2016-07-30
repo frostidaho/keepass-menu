@@ -59,10 +59,10 @@ def run(stdin_dict, n_lines_per_key=-1, entry_sep='+'):
 
 def build_rofi_input(keepass_db):
     """Create a rofi-usable dict from a KeePassDB object.
-    
+
     keepass_db is just a namedtuple with fields 'filename' and 'entries'
 
-    The keys are display strings for each entry in the keepass database 
+    The keys are display strings for each entry in the keepass database
     The values are a namedtuple containing all of an entry's info.
     """
     def tabulate_list(entries, entry_layout):
@@ -81,12 +81,13 @@ def build_rofi_input(keepass_db):
     to_format = tabulate_list(entries, entry_layout)
     table_str = tabulate(to_format, tablefmt='plain')
     if not table_str.endswith('\n'):
-        table_str += '\n' # Needs to have trailing newline
+        table_str += '\n'  # Needs to have trailing newline
         # due to the following regex. TODO This whole module needs to be looked at.
         # It is pretty fragile.
 
     table = re.findall(len(entry_layout) * r'.*\n', table_str)
     return OrderedDict(zip(table, [x.as_ntuple for x in entries]))
+
 
 @_utils.root.register(name='rofi')
 def launch_rofi(*keepass_dbs):
@@ -97,5 +98,3 @@ def launch_rofi(*keepass_dbs):
 
     totald = build_rofi_input(keepass_db)
     return run(totald)
-
-
