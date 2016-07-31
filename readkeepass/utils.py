@@ -1,16 +1,10 @@
 import logging
-import subprocess as _subprocess
 from inspect import signature as _signature
 from functools import wraps as _wraps, partial as _partial
-from collections import OrderedDict as _OrderedDict, UserDict as _UserDict
+from collections import OrderedDict as _OrderedDict
 from collections import namedtuple as _namedtuple
 
 KPCredentials = _namedtuple('KPCredentials', ('db', 'keyfile', 'password'))
-
-
-def notify_send(message):
-    "Send desktop notification using 'notify-send'"
-    _subprocess.run(['notify-send', message])
 
 
 def _preserve_sig(fn):
@@ -73,7 +67,13 @@ class SensitiveLoggerD(LoggerD):
 
 
 class OrderedNamespace:
+    "A namespace class where attributes are stored in an ordered dict"
     def __init__(self, name, key_value_pairs=None):
+        """Create a namespace named name
+
+        key_value_pairs is an optional iterable of pairs
+        that will be used to populate the namespace.
+        """
         self._odict = _OrderedDict()
         self._name = name
         if key_value_pairs is not None:
@@ -116,7 +116,20 @@ class OrderedNamespace:
 
 
 class Node(OrderedNamespace):
+    """Node is a namespace class for registering objects
 
+    Use Node().register to register objects as leaves
+    Example:
+        root = Node('root')
+        @root.register
+        def somefunc(): pass
+        root.register({'a':1, 'b':2}, name='somedict')
+
+    Use Node().__call__ to add sub-nodes
+    Example:
+        root = Node('root')
+        subnode = root('subnode')
+    """
     def register(self, obj=None, *, name=None, overwrite=False):
         "register is a decorator that will add object to this instance"
         if obj is None:

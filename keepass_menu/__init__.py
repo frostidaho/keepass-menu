@@ -1,5 +1,6 @@
 """Select entries from KeePass databases using rofi.
 """
+import subprocess
 from readkeepass import rkp
 from keepass_menu import parser
 
@@ -11,8 +12,18 @@ if DEBUG:
     logger.setLevel(logging.DEBUG)
     logger.addHandler(logging.StreamHandler())
 
+def notify_send(message):
+    "Send desktop notification using 'notify-send'"
+    subprocess.run(['notify-send', message])
+
+def notify_selected(entry):
+    "Send desktop notification about the selected entry."
+    fields = [entry.title, entry.url, entry.username]
+    fields = [x for x in fields if x]
+    notify_send('Selected:' + ' -- '.join(fields))
 
 def get_creds(args, *kp_credentials):
+    "Return a list of credentials for all of the dbs in kp_credentials."
     grab = rkp.GrabCredentials(
         pw_query=args.pw_query,
         use_keyring=args.key_ring,
@@ -22,6 +33,7 @@ def get_creds(args, *kp_credentials):
 
 
 def main(test_args=None):
+    "Run keepass-menu"
     output_methods = rkp.output.node_leaves
     success, args = parser.get_args(
         output=output_methods,
@@ -35,6 +47,8 @@ def main(test_args=None):
     keepass_databases = [rkp.load_db(*cred) for cred in credentials]
 
     selected_key, selected_entry = rkp.rofi(*keepass_databases)
+    notify_selected(selected_entry)
+
     try:
         username, password = selected_entry.username, selected_entry.password
     except AttributeError:

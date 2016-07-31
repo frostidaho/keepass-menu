@@ -24,7 +24,8 @@ class Database:
             self.assertEqual(password, nt_entry.password)
             
 
-class Test_KeePassX_OnlyKey(unittest.TestCase, Database):
+class Test_KeePassX2_OnlyKey(unittest.TestCase, Database):
+    """Database created with the keepassx2"""
     @classmethod
     def setUpClass(cls):
         cls.db = path.join(data_dir, 'keepassx_onlykey.kdbx')
@@ -46,7 +47,8 @@ class Test_KeePassX_OnlyKey(unittest.TestCase, Database):
         ]
 
 
-class Test_KeePassX_PWandKey(unittest.TestCase, Database):
+class Test_KeePassX2_PWandKey(unittest.TestCase, Database):
+    """Database created with the keepassx2"""
     @classmethod
     def setUpClass(cls):
         cls.db = path.join(data_dir, 'exampledatabase.kdbx')
@@ -92,7 +94,8 @@ class Test_KeePassX_PWandKey(unittest.TestCase, Database):
         ]
 
 
-class Test_KeePassX_PW(unittest.TestCase, Database):
+class Test_KeePassX2_PW(unittest.TestCase, Database):
+    """Database created with the keepassx2"""
     @classmethod
     def setUpClass(cls):
         cls.db = path.join(data_dir, 'db2.kdbx')
@@ -111,6 +114,27 @@ class Test_KeePassX_PW(unittest.TestCase, Database):
              'title': 'Google',
              'url': '',
              'username': 'googleuser@mydomain.net'}
+        ]
+
+class Test_KeePass_PWKey(unittest.TestCase, Database):
+    """Database created with the original keepass from http://keepass.info/"""
+    @classmethod
+    def setUpClass(cls):
+        cls.db = path.join(data_dir, 'NewDatabase.kdbx')
+        cls.keyfile = path.join(data_dir, 'NewDatabase.key')
+        cls.password = 'pass'
+        cls.dict_entries = [
+            {'groupname': 'NewDatabase',
+             'notes': 'Notes',
+             'password': 'Password',
+             'title': 'Sample Entry',
+             'url': 'http://keepass.info/',
+             'username': 'User Name'},
+            {'groupname': 'NewDatabase',
+             'password': '12345',
+             'title': 'Sample Entry #2',
+             'url': 'http://keepass.info/help/kb/testform.html',
+             'username': 'Michael321'}
         ]
 
 
