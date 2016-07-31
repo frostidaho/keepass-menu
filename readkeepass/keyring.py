@@ -1,23 +1,21 @@
-import hashlib
-import json
-from collections import namedtuple
+import json as _json
+from hashlib import md5 as _md5
+from collections import namedtuple as _namedtuple
 
 import secretstorage  # https://pythonhosted.org/SecretStorage/
 import readkeepass.utils as _utils
 
 
-_logsensitive = _utils.SensitiveLoggerD(__name__)
 _logger = _utils.get_logger(__name__)
 _DEFAULT_COLLECTION = 'keepass-menu'
 
-KeyringItem = namedtuple('KeyringItem', ('label', 'secret', 'raw'))
-# KPCredentials = namedtuple('KPCredentials', ('db', 'keyfile', 'password'))
+KeyringItem = _namedtuple('KeyringItem', ('label', 'secret', 'raw'))
 KPCredentials = _utils.KPCredentials
 
 
 def _text_to_md5_digest(text):
     "Compute the md5sum of text and return it as a string"
-    htext = hashlib.md5(text.encode())
+    htext = _md5(text.encode())
     return htext.hexdigest()
 
 
@@ -31,11 +29,11 @@ class Secret:
 
     @staticmethod
     def create(**kwargs):
-        return json.dumps(kwargs, sort_keys=True)
+        return _json.dumps(kwargs, sort_keys=True)
 
     @staticmethod
     def parse(secret):
-        return json.loads(secret)
+        return _json.loads(secret)
 
 
 class Keyring:
@@ -43,6 +41,7 @@ class Keyring:
     def __init__(self, collection_name):
         self.bus = secretstorage.dbus_init()
         self.coll = self._get_or_make_coll(self.bus, collection_name)
+        self.collection_name = collection_name
 
     def __enter__(self):
         return self
@@ -179,16 +178,21 @@ class KPKeyring(Keyring):
         self.keyfile = keyfile
         super().__init__(collection_name)
 
-    @_logsensitive
     def get_secret(self):
+        msg = 'Retrieving secret from keyring "{}" for {}'
+        _logger.debug(msg.format(self.collection_name, self.db))
         try:
             secret = super().get_secret(self.label)
-            return KPCredentials(**secret)
+            cred = KPCredentials(**secret)
+            _logger.debug('Received secret for {}'.format(self.db))
+            return cred
         except (AttributeError, TypeError):
+            _logger.debug('No secret found for {}'.format(self.db))
             return None
 
-    @_logsensitive
     def set_secret(self, password, keyfile=None):
+        msg = 'Setting secret for {} in keyring "{}"'
+        _logger.debug(msg.format(self.db, self.collection_name))
         if keyfile is None:
             keyfile = self.keyfile
 
@@ -227,6 +231,3 @@ class Credentials:
     def delete(self):
         with self._keyring() as ring:
             return ring.delete_item()
-
-
-

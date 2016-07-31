@@ -10,7 +10,7 @@ from itertools import chain as _chain, count as _count
 
 import readkeepass.utils as _utils
 from . import libkeepass
-_logsensitive = _utils.SensitiveLoggerD(__name__, _utils.logging.DEBUG)
+_logger = _utils.get_logger(__name__)
 
 
 def _ntuple_from_dict(d, NamedTuple):
@@ -24,7 +24,6 @@ def _ntuple_from_dict(d, NamedTuple):
     )
 
 
-@_logsensitive
 def load_entries(db, keyfile='', password=''):
     "Return the entries in the keepass-db as an iterable of dicts"
     def load_kdb(db, password, keyfile):
@@ -50,7 +49,8 @@ def load_entries(db, keyfile='', password=''):
         except AttributeError:  # If there is no group it is deleted or something
             return None
         return d
-
+    msg = 'Loading {} [given keyfile = {}, given password = {}]'
+    _logger.debug(msg.format(db, bool(keyfile), bool(password)))
     kdb = load_kdb(db, password, keyfile)
     entries = kdb.obj_root.findall('.//Entry')
     entries2 = []
@@ -58,6 +58,8 @@ def load_entries(db, keyfile='', password=''):
         d = entry_to_dict(e)
         if d:
             entries2.append(d)
+    msg = 'Successfully loaded {}: found {} entries'
+    _logger.debug(msg.format(db, len(entries2)))
     return entries2
 
 
@@ -93,11 +95,11 @@ class StringElements:
         for k, v in self.d_entry.items():
             try:
                 if v:
-                    d_formatted[k] = getattr(self, k)(v)
+                    d_formatted[k] = getattr(self, k)(str(v))
                 else:
                     d_formatted[k] = ''
             except AttributeError:
-                d_formatted[k] = v
+                d_formatted[k] = str(v)
         self.d_formatted = d_formatted
         return d_formatted
 

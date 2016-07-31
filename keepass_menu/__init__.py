@@ -10,7 +10,10 @@ if DEBUG:
     import logging
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    logger.addHandler(logging.StreamHandler())
+    handler = logging.StreamHandler()
+    frmt = logging.Formatter('%(levelname)s:%(module)s.%(funcName)s\n\t%(message)s')
+    handler.setFormatter(frmt)
+    logger.addHandler(handler)
 
 def notify_send(message):
     "Send desktop notification using 'notify-send'"

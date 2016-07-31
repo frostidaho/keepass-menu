@@ -45,27 +45,6 @@ class LoggerD:
         return log
 
 
-class SensitiveLoggerD(LoggerD):
-    "A logger decorator factory for sensitive information"
-
-    def __call__(self, fn):
-        logger = self.logger.getChild(fn.__qualname__)
-
-        @_preserve_sig(fn)
-        def sensitive_log(*pargs, **kwargs):
-            res = fn(*pargs, **kwargs)
-            msg = []
-            msg.append('type(result) -> {}'.format(type(res)))
-            msg.append('bool(result) -> {}'.format(bool(res)))
-            try:
-                msg.append('len(result) -> {}'.format(len(res)))
-            except TypeError:
-                pass
-            logger.log(self.msg_level, ' :: '.join(msg))
-            return res
-        return sensitive_log
-
-
 class OrderedNamespace:
     "A namespace class where attributes are stored in an ordered dict"
     def __init__(self, name, key_value_pairs=None):
