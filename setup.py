@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="keepass-menu",
-    version="0.0.2",
+    version="0.0.3",
     packages=[
         "readkeepass",
         "readkeepass.kdb",
@@ -33,7 +33,11 @@ setup(
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
+        "Intended Audience :: Developers",
+        "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: System Administrators",
+        "Topic :: Security",
+        "Environment :: X11 Applications",
     ]
 )
