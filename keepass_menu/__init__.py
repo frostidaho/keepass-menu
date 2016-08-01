@@ -4,7 +4,7 @@ import subprocess
 from readkeepass import rkp
 from keepass_menu import parser
 
-DEBUG = False
+DEBUG = True
 
 if DEBUG:
     import logging
@@ -46,6 +46,7 @@ def main(test_args=None):
     if not success:
         return False
 
+    # TODO fix this for dbs where there is no password
     credentials = get_creds(args, *args.db_paths)
     keepass_databases = [rkp.load_db(*cred) for cred in credentials]
 

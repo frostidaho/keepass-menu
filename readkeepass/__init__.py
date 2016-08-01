@@ -53,6 +53,7 @@ class GrabCredentials:
             cred = self._keyring(self.db).get()
             if cred:
                 self.password = cred.password
+                self.keyfile = cred.keyfile
                 return True
         prompt = self.db.rsplit('/', maxsplit=1)[-1]
         self.password = self._userinput[self.pw_query](prompt)
