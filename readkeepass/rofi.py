@@ -1,5 +1,4 @@
 import subprocess as sp
-import re
 from collections import OrderedDict
 from readkeepass import utils as _utils
 from tabulate import tabulate
