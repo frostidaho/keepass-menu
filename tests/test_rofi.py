@@ -1,6 +1,12 @@
-from collections import OrderedDict
-from readkeepass import rofi
 import unittest
+from collections import OrderedDict
+from readkeepass import rofi, kdb
+from os import path
+
+try:
+    data_dir = path.join(path.dirname(path.abspath(__file__)), 'data')
+except NameError:
+    data_dir = path.join(os.getcwd(), 'data')
 
 
 class TestNLinesPerKey(unittest.TestCase):
@@ -34,6 +40,29 @@ class TestNLinesPerKey(unittest.TestCase):
         dout, n_lines_per_key = self.prep_dict(d, 99)
         self.assertEqual(n_lines_per_key, 99)
 
+
+class TestBuildRofiInput(unittest.TestCase):
+    """Test build_rofi_input, which converts a kdb.KeePassDB
+
+    to a dict format that the rofi.run function can use
+    """
+    @classmethod
+    def setUpClass(cls):
+        # cls.build_input = staticmethod(rofi.build_rofi_input)
+        db = path.join(data_dir, 'exampledatabase.kdbx')
+        keyfile = path.join(data_dir, 'exampledatabase.key')
+        password = 'pass'
+        cls.db = kdb.load(db, keyfile=keyfile, password=password)
+        cls.n_entries = len(cls.db.entries)
+        cls.result = rofi.build_rofi_input(cls.db)
+
+    def test_n_entries(self):
+        self.assertEqual(len(self.result.keys()), self.n_entries)
+
+    def test_values(self):
+        for entry, res in zip(self.db.entries, self.result.values()):
+            self.assertEqual(entry.as_ntuple, res)
+            pass
 
 if __name__ == '__main__':
     try:
