@@ -4,6 +4,7 @@ from collections import OrderedDict
 from readkeepass import utils as _utils
 from tabulate import tabulate
 
+_logger = _utils.get_logger(__name__)
 
 def _get_rofi_cmd(n_lines_per_key, entry_sep):
     if n_lines_per_key > 1:
@@ -18,6 +19,8 @@ def _prepare_stdin_dict(stdin_dict, n_lines_per_key):
     stdin_dict = OrderedDict((k.rstrip(), v) for k, v in stdin_dict.items())
     if n_lines_per_key == -1:
         n_lines_per_key = max(key.count('\n') for key in stdin_dict) + 1
+        msg = 'n_lines_per_key was not specified: found to be {}'
+        _logger.debug(msg.format(n_lines_per_key))
     return stdin_dict, n_lines_per_key
 
 
@@ -65,6 +68,7 @@ def build_rofi_input(keepass_db):
     The keys are display strings for each entry in the keepass database
     The values are a namedtuple containing all of an entry's info.
     """
+    entry_sentinel = '@@!$#@@'
     def tabulate_list(entries, entry_layout):
         to_format = []
         for e in entries:
@@ -73,6 +77,7 @@ def build_rofi_input(keepass_db):
                 vals = [d.get(key, ' ') for key in row]
                 vals = [x if x else ' ' for x in vals]
                 to_format.append(tuple(vals))
+            to_format.append([entry_sentinel] + [''] * (len(row)-1))
         return to_format
 
     entries = keepass_db.entries
@@ -80,12 +85,10 @@ def build_rofi_input(keepass_db):
 
     to_format = tabulate_list(entries, entry_layout)
     table_str = tabulate(to_format, tablefmt='plain')
-    if not table_str.endswith('\n'):
-        table_str += '\n'  # Needs to have trailing newline
-        # due to the following regex. TODO This whole module needs to be looked at.
-        # It is pretty fragile.
-
-    table = re.findall(len(entry_layout) * r'.*\n', table_str)
+    
+    table = table_str.split(entry_sentinel)
+    table = [x.lstrip() for x in table]
+    table = [x for x in table if x]
     return OrderedDict(zip(table, [x.as_ntuple for x in entries]))
 
 
