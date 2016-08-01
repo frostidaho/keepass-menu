@@ -8,14 +8,11 @@ _simulate = _autotype.simulate
 output = _utils.root('output')
 
 @output.register
-def select_output(username, password, *pargs, **kwargs):
+def menu_select(username, password, *pargs, **kwargs):
     "Select one of the other output methods"
     from readkeepass import rofi
     leaves = output.node_leaves.copy()
-    for k in list(leaves):
-        if k == 'select_output':
-            del leaves[k]
-            break
+    leaves.pop('menu_select', None)
     res = rofi.run(leaves)[1]
     return res(username, password, *pargs, **kwargs)
 
