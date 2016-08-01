@@ -16,7 +16,7 @@ def _get_rofi_cmd(n_lines_per_key, entry_sep):
 
 
 def _prepare_stdin_dict(stdin_dict, n_lines_per_key):
-    stdin_dict = OrderedDict((k.rstrip(), v) for k, v in stdin_dict.items())
+    stdin_dict = OrderedDict((k.strip(), v) for k, v in stdin_dict.items())
     if n_lines_per_key == -1:
         n_lines_per_key = max(key.count('\n') for key in stdin_dict) + 1
         msg = 'n_lines_per_key was not specified: found to be {}'
