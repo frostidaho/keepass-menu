@@ -193,28 +193,29 @@ def get_clicks_xy(number_of_clicks=2):
 class simulate:
     click = pyautogui.click
     staticmethod(click)
+    short_wait = 0.075
 
-    @staticmethod
-    def click_and_type(x, y, text):
+    @classmethod
+    def click_and_type(cls, x, y, text):
         # pyautogui.moveTo(x, y, duration=0.1)
-        pyautogui.click(x, y, clicks=2, interval=0.025, duration=0.05)
-        sleep(0.1)
-        pyautogui.typewrite(text, interval=0.05)
+        pyautogui.click(x, y, clicks=2, interval=cls.short_wait/2.0, duration=cls.short_wait)
+        sleep(cls.short_wait * 2.0)
+        pyautogui.typewrite(text, interval=cls.short_wait)
 
-    @staticmethod
-    def enter_key():
-        sleep(0.05)
+    @classmethod
+    def enter_key(cls):
+        sleep(cls.short_wait)
         pyautogui.typewrite(['enter', ])
 
-    @staticmethod
-    def tab_key():
-        sleep(0.05)
+    @classmethod
+    def tab_key(cls):
+        sleep(cls.short_wait)
         pyautogui.typewrite(['tab', ])
 
-    @staticmethod
-    def type(text):
-        sleep(0.05)
-        pyautogui.typewrite(text, interval=0.05)
+    @classmethod
+    def type(cls, text):
+        sleep(cls.short_wait)
+        pyautogui.typewrite(text, interval=cls.short_wait)
 
 
 def type_at_clicks(*text_to_type):
@@ -230,7 +231,7 @@ def type_at_clicks(*text_to_type):
     # simulate.enter_key()
 
 
-def click_and_type(*text_to_type, sep=simulate.tab_key, end=simulate.enter_key):
+def click_and_type(*text_to_type, sep=simulate.tab_key):
     """Type text at locations specified by one click.
 
     Separate each text element by calling the sep function.
@@ -245,4 +246,3 @@ def click_and_type(*text_to_type, sep=simulate.tab_key, end=simulate.enter_key):
     for text in text_to_type[1:]:
         sep()
         simulate.type(text)
-    end()

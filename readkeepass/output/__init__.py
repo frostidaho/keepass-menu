@@ -46,8 +46,7 @@ def autotype(username, password, *pargs, **kwargs):
 def autotype_tab(username, password, *pargs, **kwargs):
     "Click on username, and then it will autotype using tab to switch fields."
     tab = _simulate.tab_key
-    enter = _simulate.enter_key
-    _autotype.click_and_type(username, password, sep=tab, end=enter)
+    _autotype.click_and_type(username, password, sep=tab)
 
 
 @output.register
