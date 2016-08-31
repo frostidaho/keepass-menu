@@ -4,7 +4,7 @@ import subprocess
 from readkeepass import rkp
 from keepass_menu import parser
 
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     import logging
