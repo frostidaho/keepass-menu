@@ -39,7 +39,7 @@ def copy(username, password, *pargs, **kwargs):
 def autotype(username, password, *pargs, **kwargs):
     "Click on username and password, and then it autotypes."
     _autotype.type_at_clicks(username, password)
-    _simulate.enter_key()
+    # _simulate.enter_key()
 
 
 @output.register
