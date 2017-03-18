@@ -10,17 +10,17 @@ mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_dir := $(dir $(mkfile_path))
 
 .PHONY: all
-all: uninstall install_user
+all: uninstall install-user
 
-.PHONY: install_develop
-install_develop:
+.PHONY: install-develop
+install-develop:
 	@echo "----------------------------------------"
 	@echo -e "Installing keepass in development mode from\n\t" $(project_dir)
 	@echo "----------------------------------------"
 	pip install --user -e $(project_dir)
 
-.PHONY: install_user
-install_user:
+.PHONY: install-user
+install-user:
 	@echo "----------------------------------------"
 	@echo -e "Installing keepass into home directory from\n\t" $(project_dir)
 	@echo "----------------------------------------"
