@@ -67,7 +67,8 @@ class TestTransfArgs(unittest.TestCase):
         res = self.transform(['-f', 'somefile'])
         self.assertTrue(res.success)
         self.assertEqual(res.args.filename[0][0], 'somefile')
-        self.assertEqual(res.args.db_paths[0].db, 'somefile')
+        from os import path
+        self.assertEqual(path.basename(res.args.db_paths[0].db), 'somefile')
         self.assertEqual(res.args.db_paths[0].keyfile, '')
 
     def test_multi_files(self):
@@ -80,12 +81,13 @@ class TestTransfArgs(unittest.TestCase):
             
         res = self.transform(args_list)
         self.assertTrue(res.success)
+        from os.path import basename
         for resfile, origfile in zip(res.args.filename, files):
             self.assertEqual(resfile, origfile)
         for resfile, origfile in zip(res.args.db_paths, files):
-            self.assertEqual(resfile.db, origfile[0])
+            self.assertEqual(basename(resfile.db), origfile[0])
             try:
-                self.assertEqual(resfile.keyfile, origfile[1])
+                self.assertEqual(basename(resfile.keyfile), origfile[1])
             except IndexError:
                 self.assertEqual(resfile.keyfile, '')
 
