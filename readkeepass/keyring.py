@@ -67,7 +67,10 @@ class Keyring:
         return Secret.parse(item.secret)
 
     def close(self):
-        self.bus.close()
+        try:
+            self.bus.close()
+        except AttributeError:
+            pass
 
     def delete_keyring(self):
         self.coll.delete()
